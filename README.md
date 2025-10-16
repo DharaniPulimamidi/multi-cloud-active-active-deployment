@@ -1,12 +1,12 @@
-# 🏗️ Multi-Cloud Active-Active Deployment
+# Multi-Cloud Active-Active Deployment
 
-## 📘 Overview  
+## Overview  
 This project demonstrates an **active-active multi-cloud architecture** leveraging **AWS** and **Azure** to achieve **high availability**, **resilience**, and **disaster recovery**.  
 It automates infrastructure deployment and synchronization across both clouds using **Terraform**, **CI/CD pipelines**, and **serverless components**.
 
 ---
 
-## 🌐 Architecture Summary
+## Architecture Summary
 - **Cloud Providers:** AWS & Azure  
 - **Infrastructure as Code:** Terraform  
 - **Automation / CI-CD:** YAML pipelines (Azure DevOps or GitHub Actions)  
@@ -19,7 +19,7 @@ It automates infrastructure deployment and synchronization across both clouds us
 
 ---
 
-## ⚙️ Tech Stack
+## Tech Stack
 
 | Component | Technology Used |
 |------------|------------------|
@@ -32,7 +32,7 @@ It automates infrastructure deployment and synchronization across both clouds us
 
 ---
 
-## 🚀 Deployment Steps
+## Deployment Steps
 
 ### 1. Clone the repository
 
