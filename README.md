@@ -1,21 +1,47 @@
-Project 6 — Multi‑Cloud Active‑Active (AWS + Azure)
--------------------------------------------------
+# 🏗️ Multi-Cloud Active-Active Deployment
 
-Contents (in this ZIP):
-- Project6_MultiCloud_ActiveActive.md  (full project document)
-- architecture_diagram.png (visual diagram)
-- users_50k.csv  (synthetic dataset, 50,000 rows)
-- code/ (sample app, terraform snippets, CI YAML)
-- code.zip (convenience ZIP containing code/ folder)
+## 📘 Overview  
+This project demonstrates an **active-active multi-cloud architecture** leveraging **AWS** and **Azure** to achieve **high availability**, **resilience**, and **disaster recovery**.  
+It automates infrastructure deployment and synchronization across both clouds using **Terraform**, **CI/CD pipelines**, and **serverless components**.
 
-Quick start:
-1. Inspect the project document for design and implementation steps: Project6_MultiCloud_ActiveActive.md
-2. Review the architecture diagram in architecture_diagram.png
-3. Browse sample code under code/
-4. Use the dataset users_50k.csv for load/ingestion testing. For local tests, reduce row count as desired.
-5. Deploy using Terraform by filling in provider credentials and variables in code/terraform/*
+---
 
-Notes:
-- The Terraform files are minimal examples — customize and harden before running in production.
-- The sample app is intentionally small and intended for demonstration and testing.
-- If you want a larger dataset (e.g., 200k or 1M rows) or a different schema (product orders, logs), tell me and I will generate it.
+## 🌐 Architecture Summary
+- **Cloud Providers:** AWS & Azure  
+- **Infrastructure as Code:** Terraform  
+- **Automation / CI-CD:** YAML pipelines (Azure DevOps or GitHub Actions)  
+- **Application Layer:** Node.js (Lambda & Azure Function)  
+- **Storage Layer:** Cross-cloud data synchronization (S3 ↔ Azure Blob)  
+- **Networking:** Load balancing and DNS-based failover  
+- **Monitoring:** Cloud-native metrics and alerting  
+
+![Architecture Diagram](architecture_diagram.png)
+
+---
+
+## ⚙️ Tech Stack
+
+| Component | Technology Used |
+|------------|------------------|
+| Infrastructure | Terraform |
+| CI/CD | GitHub Actions / Azure DevOps |
+| Compute | AWS Lambda / Azure Functions |
+| Language | Node.js |
+| Storage | AWS S3 / Azure Blob |
+| Monitoring | CloudWatch / Azure Monitor |
+
+---
+
+## 🚀 Deployment Steps
+
+### 1. Clone the repository
+
+### 2. Configure environment variables
+
+### 3. Deploy Infrastructure
+
+### 4. Run Application
+
+### 5. Trigger CI/CD
+
+
