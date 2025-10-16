@@ -1,7 +1,6 @@
 # Project 6 — Multi‑Cloud Active‑Active (AWS + Azure)
 
-**Document purpose:**
-This document is a full step‑by‑step implementation guide for an active‑active serverless deployment spanning AWS and Azure. It contains architecture, implementation steps, Terraform examples, CI/CD pipeline skeleton, sample app code, sample data and an operational runbook you can hand in as project deliverables.
+Implementation guide for an active‑active serverless deployment spanning AWS and Azure. It contains architecture, implementation steps, Terraform examples, CI/CD pipeline skeleton, sample app code, sample data and an operational runbook you can hand in as project deliverables.
 
 ---
 
@@ -12,7 +11,7 @@ Design and implement an active‑active serverless application deployed to both 
 
 ## Scope & assumptions
 - Two cloud accounts: AWS (with ability to create IAM roles, Route53, Lambda, DynamoDB, S3) and Azure (subscription with permissions to create Function Apps, Traffic Manager/Front Door, Cosmos DB, Storage Account).
-- We will use Terraform for IaC and GitHub Actions for CI/CD (adjust to Azure DevOps / Jenkins if required).
+- Used Terraform for IaC and GitHub Actions for CI/CD (adjust to Azure DevOps / Jenkins if required).
 - Example app: a simple HTTP API (serverless) that returns region/instance metadata and writes simple objects to the datastore.
 - RPO: eventual consistency; RTO: immediate traffic shift via DNS/traffic manager.
 
@@ -115,19 +114,7 @@ Sample minimal Terraform snippets are included in the appendix of this document 
 2. Deploy a tiny bridge consumer in each cloud that subscribes to the local queue and republishes to the other cloud (idempotent writes). This can be a Lambda / Function with minimal permissions.
 3. Use a message format with `event_id`, `source_region`, `op_type`, `payload`, and `timestamp`.
 
-**Idempotency**: keep an `operation_id` in the datastore or an `applied_events` table to deduplicate.
 
-**Example event (JSON)**
-
-```json
-{
-  "event_id": "e8b1f1c2-1234-4abc-9f00-1a2b3c4d5e6f",
-  "source": "aws-us-east-1",
-  "type": "user.created",
-  "payload": {"userId":"12345","name":"Alice Example"},
-  "timestamp": "2025-10-09T12:00:00Z"
-}
-```
 
 ---
 
@@ -148,7 +135,7 @@ Sample minimal Terraform snippets are included in the appendix of this document 
 2. Two parallel deploy jobs: deploy to AWS and deploy to Azure.
 3. Use GitHub OIDC to authenticate to cloud providers and avoid storing long‑lived secrets.
 
-**High level workflow:** `ci/pipeline.yml` (see appendix for full file) — steps: build, unit tests, lint, package, deploy‑aws, deploy‑azure, run smoke tests.
+
 
 ---
 
@@ -174,21 +161,6 @@ Sample minimal Terraform snippets are included in the appendix of this document 
 
 ---
 
-### Phase 10 — Documentation & handover
-1. Deliverables:
-   - Architecture diagram (Mermaid + exported PNG/SVG)
-   - Terraform code for both clouds
-   - Sample app source (one endpoint, container/zip)
-   - CI pipeline YAML
-   - Runbook and test logs from a DR drill
-   - README with deployment steps
-
-2. Place everything under `docs/deliverables.md` and tag the release in GitHub.
-
----
-
-## Runbook (short) — common scenarios
-
 **If AWS endpoint fails health checks:**
 1. Traffic is automatically routed to Azure by DNS/Traffic Manager.
 2. Run health checks and check CloudWatch logs.
@@ -201,137 +173,7 @@ Sample minimal Terraform snippets are included in the appendix of this document 
 **If cross‑cloud replication lags:**
 - Inspect message queue length, consumer errors, replay dead‑lettered messages.
 
----
 
-## Sample app (concept)
-**Behavior:** an HTTP GET `/region` returns the cloud and region plus a health indicator. POST `/user` writes a user object and emits an event to the local queue.
-
-**Sample `user` JSON**
-
-```json
-{
-  "userId": "12345",
-  "name": "Alice Example",
-  "email": "alice@example.com",
-  "createdAt": "2025-10-09T12:00:00Z",
-  "metadata": {"preferred_language": "en"}
-}
-```
-
-**Minimal Node.js express handler (serverless friendly)**
-```js
-// handler.js (concept)
-exports.handler = async (event) => {
-  if (event.httpMethod === 'GET') return { statusCode: 200, body: JSON.stringify({ region: process.env.REGION, status: 'ok' }) };
-  if (event.httpMethod === 'POST') {
-    const body = JSON.parse(event.body);
-    // write to DB and publish event to queue
-    return { statusCode: 201, body: JSON.stringify({ id: body.userId }) };
-  }
-};
-```
-
----
-
-## Terraform snippets (appendix)
-**AWS Lambda + API Gateway (short)**
-
-```hcl
-resource "aws_iam_role" "lambda_exec" {
-  name = "lambda_exec_role"
-  assume_role_policy = data.aws_iam_policy_document.lambda_assume.json
-}
-
-resource "aws_lambda_function" "app" {
-  function_name = "multicloud-app"
-  filename      = var.package_zip
-  handler       = var.handler
-  runtime       = var.runtime
-  role          = aws_iam_role.lambda_exec.arn
-}
-
-resource "aws_api_gatewayv2_api" "http" {
-  name          = "multicloud-http"
-  protocol_type = "HTTP"
-}
-```
-
-**Azure Function (short)**
-
-```hcl
-resource "azurerm_resource_group" "rg" {
-  name     = var.rg_name
-  location = var.location
-}
-
-resource "azurerm_function_app" "fa" {
-  name                       = var.func_name
-  location                   = azurerm_resource_group.rg.location
-  resource_group_name        = azurerm_resource_group.rg.name
-  app_service_plan_id        = azurerm_app_service_plan.plan.id
-  storage_account_name       = azurerm_storage_account.sa.name
-  storage_account_access_key = azurerm_storage_account.sa.primary_access_key
-  version                    = "~4"
-}
-```
-
----
-
-## CI snippet (GitHub Actions skeleton)
-
-```yaml
-name: CI
-on: [push]
-jobs:
-  build:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Set up Node
-        uses: actions/setup-node@v4
-        with: { node-version: '18' }
-      - name: Install
-        run: npm ci
-      - name: Run tests
-        run: npm test
-      - name: Package
-        run: npm run package
-
-  deploy-aws:
-    needs: build
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v2
-        with:
-          role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
-          aws-region: us-east-1
-      - name: Terraform Init/Apply
-        run: |
-          cd terraform/aws
-          terraform init
-          terraform apply -auto-approve
-
-  deploy-azure:
-    needs: build
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Login to Azure
-        uses: azure/login@v1
-        with:
-          client-id: ${{ secrets.AZ_CLIENT_ID }}
-          tenant-id: ${{ secrets.AZ_TENANT_ID }}
-          subscription-id: ${{ secrets.AZ_SUBSCRIPTION_ID }}
-      - name: Terraform Init/Apply
-        run: |
-          cd terraform/azure
-          terraform init
-          terraform apply -auto-approve
-```
-
----
 
 ## Deliverables checklist
 - [ ] Full architecture diagram (Mermaid + PNG)
@@ -340,16 +182,6 @@ jobs:
 - [ ] GitHub Actions pipeline YAML
 - [ ] Runbook + DR test logs
 - [ ] README with deployment steps and how to run local tests
-
----
-
-## Next steps (what I can generate for you right now)
-- Export the Mermaid diagram to PNG/SVG and add to `docs/`.
-- Generate the Terraform module files for AWS Lambda and Azure Function (full `main.tf`, `variables.tf`, `outputs.tf`).
-- Produce the GitHub Actions YAML `ci/pipeline.yml` ready to paste.
-- Generate the sample app code repository layout and a data seed script.
-
-Tell me which artifacts you want produced first and I will create them in the repo and note where to copy them from in the canvas.
 
 ---
 
