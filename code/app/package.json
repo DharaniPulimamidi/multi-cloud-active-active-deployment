@@ -1,0 +1,9 @@
+{
+  "name": "multicloud-sample-app",
+  "version": "0.1.0",
+  "main": "handler.js",
+  "scripts": {
+    "test": "echo 'no tests'",
+    "package": "zip -r ../artifact.zip ."
+  }
+}
